@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Game Widget</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: white;
+            --bg-tertiary: #f9f9f9;
+            --bg-quaternary: #e9e9e9;
+            --text-primary: #333;
+            --text-secondary: #555;
+            --border-color: #ddd;
+            --border-input: #ccc;
+            --accent-color: #ff6a00;
+            --accent-hover: #e55a00;
+            --accent-active: #cc4f00;
+            --success-color: #e55a00;
+            --success-hover: #cc4f00;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --bg-quaternary: #4a4a4a;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #555;
+            --border-input: #666;
+            --accent-color: #ff6a00;
+            --accent-hover: #ff7a1a;
+            --accent-active: #e55a00;
+            --success-color: #ff7a1a;
+            --success-hover: #e55a00;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: var(--text-primary);
+            text-align: center;
+            margin: 0;
+            flex: 1;
+        }
+        .theme-toggle {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .theme-toggle:hover {
+            background: var(--accent-hover);
+        }
+        .file-upload {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            background: var(--bg-tertiary);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .file-upload input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .sheet-selector {
+            margin: 15px 0;
+        }
+        .sheet-selector select {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .inputs-section {
+            margin-bottom: 30px;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .input-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-secondary);
+        }
+        .input-group input {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            transform: scale(1.2);
+            accent-color: var(--accent-color);
+        }
+        .checkbox-group label {
+            font-weight: bold;
+            color: var(--text-secondary);
+        }
+        .results-section {
+            margin-top: 30px;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .result-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .result-title {
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            text-align: center;
+            padding: 8px;
+            background: var(--bg-quaternary);
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .result-textarea {
+            width: 100%;
+            height: 120px;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid var(--border-input);
+            border-radius: 4px;
+            padding: 10px;
+            resize: vertical;
+            box-sizing: border-box;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .copy-btn {
+            width: 100%;
+            padding: 8px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+        .copy-btn:active {
+            background: var(--accent-active);
+        }
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+        }
+        .generate-btn:hover {
+            background: var(--success-hover);
+        }
+        .success-msg {
+            color: var(--success-color);
+            font-weight: bold;
+            margin-top: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-msg.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div></div>
+            <h1>Casino Game Widget</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
+        </div>
+        
+        <div class="file-upload">
+            <h3>Upload Excel File</h3>
+            <input type="file" id="excelFile" accept=".xlsx,.xls" />
+            <div class="sheet-selector" id="sheetSelector" style="display: none;">
+                <label for="sheetSelect">Select Sheet:</label>
+                <select id="sheetSelect"></select>
+            </div>
+        </div>
+
+        <div class="inputs-section">
+            <h3>Input Data</h3>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="input1">Widget Name (B1):</label>
+                    <input type="text" id="input1" placeholder="Enter widget name">
+                </div>
+                <div class="input-group">
+                    <label for="input2">Game Codes (B2):</label>
+                    <input type="text" id="input2" placeholder="Enter game codes">
+                </div>
+                <div class="input-group">
+                    <label for="input3">EN Title (B3):</label>
+                    <input type="text" id="input3" placeholder="Enter EN title">
+                </div>
+                <div class="input-group">
+                    <label for="input4">CN Title (B4):</label>
+                    <input type="text" id="input4" placeholder="Enter CN title">
+                </div>
+                <div class="input-group">
+                    <label for="input5">VN Title (B5):</label>
+                    <input type="text" id="input5" placeholder="Enter VN title">
+                </div>
+                <div class="input-group">
+                    <label for="input6">TH Title (B6):</label>
+                    <input type="text" id="input6" placeholder="Enter TH title">
+                </div>
+                <div class="input-group">
+                    <label for="input7">KR Title (B7):</label>
+                    <input type="text" id="input7" placeholder="Enter KR title">
+                </div>
+                <div class="input-group">
+                    <label for="input8">ID Title (B8):</label>
+                    <input type="text" id="input8" placeholder="Enter ID title">
+                </div>
+                <div class="input-group">
+                    <label for="input9">KM Title (B9):</label>
+                    <input type="text" id="input9" placeholder="Enter KM title">
+                </div>
+                <div class="input-group">
+                    <label for="input10">JP Title (B10):</label>
+                    <input type="text" id="input10" placeholder="Enter JP title">
+                </div>
+                <div class="input-group">
+                    <label for="input11">IN Title (B11):</label>
+                    <input type="text" id="input11" placeholder="Enter IN title">
+                </div>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="autoPlay">
+                <label for="autoPlay">Auto Play (adds auto-play-enabled :auto-play-speed="3000")</label>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generateCode()">Generate CustomGames Code</button>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h3>Generated Code</h3>
+            <div class="results-grid">
+                <div class="result-item">
+                    <div class="result-title">Widget Name - EN</div>
+                    <textarea class="result-textarea" id="resultEN" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultEN', this)">Copy</button>
+                    <div class="success-msg" id="successEN">Copied!</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-title">Widget Name - CN</div>
+                    <textarea class="result-textarea" id="resultCN" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultCN', this)">Copy</button>
+                    <div class="success-msg" id="successCN">Copied!</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-title">Widget Name - VN</div>
+                    <textarea class="result-textarea" id="resultVN" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultVN', this)">Copy</button>
+                    <div class="success-msg" id="successVN">Copied!</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-title">Widget Name - TH</div>
+                    <textarea class="result-textarea" id="resultTH" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultTH', this)">Copy</button>
+                    <div class="success-msg" id="successTH">Copied!</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-title">Widget Name - KR</div>
+                    <textarea class="result-textarea" id="resultKR" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultKR', this)">Copy</button>
+                    <div class="success-msg" id="successKR">Copied!</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-title">Widget Name - ID</div>
+                    <textarea class="result-textarea" id="resultID" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultID', this)">Copy</button>
+                    <div class="success-msg" id="successID">Copied!</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-title">Widget Name - KH</div>
+                    <textarea class="result-textarea" id="resultKH" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultKH', this)">Copy</button>
+                    <div class="success-msg" id="successKH">Copied!</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-title">Widget Name - JP</div>
+                    <textarea class="result-textarea" id="resultJP" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultJP', this)">Copy</button>
+                    <div class="success-msg" id="successJP">Copied!</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-title">Widget Name - IN</div>
+                    <textarea class="result-textarea" id="resultIN" readonly></textarea>
+                    <button class="copy-btn" onclick="copyToClipboard('resultIN', this)">Copy</button>
+                    <div class="success-msg" id="successIN">Copied!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let workbook = null;
+
+        // Theme functionality
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        // Initialize theme on page load
+        loadTheme();
+
+        document.getElementById('excelFile').addEventListener('change', handleFile);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                workbook = XLSX.read(data, { type: 'array' });
+                
+                // Populate sheet selector
+                const sheetSelect = document.getElementById('sheetSelect');
+                const sheetSelector = document.getElementById('sheetSelector');
+                
+                sheetSelect.innerHTML = '';
+                workbook.SheetNames.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    sheetSelect.appendChild(option);
+                });
+                
+                sheetSelector.style.display = 'block';
+                
+                // Auto-load first sheet
+                if (workbook.SheetNames.length > 0) {
+                    loadSheetData(workbook.SheetNames[0]);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        document.getElementById('sheetSelect').addEventListener('change', function() {
+            const selectedSheet = this.value;
+            if (selectedSheet && workbook) {
+                loadSheetData(selectedSheet);
+            }
+        });
+
+        function loadSheetData(sheetName) {
+            if (!workbook) return;
+            
+            const worksheet = workbook.Sheets[sheetName];
+            
+            // Read cells B1 to B11
+            for (let i = 1; i <= 11; i++) {
+                const cellAddress = `B${i}`;
+                const cell = worksheet[cellAddress];
+                const value = cell ? cell.v : '';
+                
+                document.getElementById(`input${i}`).value = value;
+            }
+            
+            // Auto-generate code after loading data
+            setTimeout(() => {
+                generateCode();
+            }, 100);
+        }
+
+        function generateCode() {
+            const inputs = {};
+            for (let i = 1; i <= 11; i++) {
+                inputs[i] = document.getElementById(`input${i}`).value;
+            }
+            
+            const autoPlay = document.getElementById('autoPlay').checked;
+            const autoPlayCode = autoPlay ? ' auto-play-enabled :auto-play-speed="3000"' : '';
+            
+            const languages = [
+                { code: 'EN', input: 3, id: 'resultEN' },
+                { code: 'CN', input: 4, id: 'resultCN' },
+                { code: 'VN', input: 5, id: 'resultVN' },
+                { code: 'TH', input: 6, id: 'resultTH' },
+                { code: 'KR', input: 7, id: 'resultKR' },
+                { code: 'ID', input: 8, id: 'resultID' },
+                { code: 'KH', input: 9, id: 'resultKH' },
+                { code: 'JP', input: 10, id: 'resultJP' },
+                { code: 'IN', input: 11, id: 'resultIN' }
+            ];
+            
+            languages.forEach(lang => {
+                const code = `<CustomGames
+widget-name="${inputs[3]} - (PD-WDGT-Casino)" 
+title="${inputs[lang.input]}"
+product="casino" ${autoPlayCode}
+games="${inputs[2]}"
+></CustomGames>`;
+                
+                document.getElementById(lang.id).value = code;
+            });
+            
+            // Update result titles
+            const widgetName = inputs[1] || 'Widget Name';
+            languages.forEach(lang => {
+                const titleElement = document.querySelector(`#${lang.id}`).previousElementSibling;
+                titleElement.textContent = `${widgetName}-${lang.code}`;
+            });
+            
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        // Auto-generate on input change
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input[type="text"], input[type="checkbox"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // Only auto-generate if at least widget name and game codes are filled
+                    const widgetName = document.getElementById('input1').value;
+                    const gameCodes = document.getElementById('input2').value;
+                    
+                    if (widgetName.trim() && gameCodes.trim()) {
+                        generateCode();
+                    }
+                });
+            });
+        });
+
+        function copyToClipboard(textareaId, button) {
+            const textarea = document.getElementById(textareaId);
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            
+            // Show success message
+            const successMsg = document.getElementById(`success${textareaId.replace('result', '')}`);
+            successMsg.classList.add('show');
+            
+            // Hide success message after 2 seconds
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
